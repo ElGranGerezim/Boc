@@ -88,6 +88,7 @@ public class SoundBoardEditor : Editor
                 lists[i] = Playlist.CreateInstance<Playlist>();
             }
 
+            //Catch in case there's more playlists than names.
             if (n != null)
             {
                 lists[i].title = n;
@@ -96,6 +97,8 @@ public class SoundBoardEditor : Editor
                 Debug.LogError("More Playlists than names! Fix PlaylistNames Size please!");
                 lists[i].title = "Set Name Please";
             }
+
+            //Setup and create PropertyField for the Playlist. 
             var currentList = new SerializedObject(lists[i]);
             GUIContent l = new GUIContent();
             l.text = lists[i].title;
