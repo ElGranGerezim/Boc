@@ -17,6 +17,12 @@ public class SoundBoardEditor : Editor
         serializedObject.Update();
         var t = (target as SoundBoard);
 
+        //Makes sure when a new SoundBoard is created in inspector the rest of the script doesnt throw a fit b/c playlist hasn't been initialized yet.
+        if(t.playlists == null)
+        {
+            t.playlists = new Playlist[0];
+        }
+
         //Checks to see if numbPlaylists has changed, if so, we need to re-initialize the playlist array
         if(t.playlists.Length != t.getNumbPlaylists())
         {
@@ -68,18 +74,20 @@ public class SoundBoardEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("numbPlaylists"));
         EditorGUILayout.PropertyField(playlistNamesProp);
 
-        //For loop to handle displaying Playlists
+        //For loop to handle displaying each Playlists
         for (int i = 0; i < t.playlists.Length; i++)
         {
+            //Catch in case there's more playlists than names
             string n = null;
             if(i < names.Length)
             { n = names[i]; }
 
+            //Catch in case any of the playlists are null
             if(lists[i] == null)
             {
                 lists[i] = Playlist.CreateInstance<Playlist>();
             }
-            
+
             if (n != null)
             {
                 lists[i].title = n;
@@ -89,7 +97,6 @@ public class SoundBoardEditor : Editor
                 lists[i].title = "Set Name Please";
             }
             var currentList = new SerializedObject(lists[i]);
-         // EditorGUILayout.LabelField(lists[i].title);
             GUIContent l = new GUIContent();
             l.text = lists[i].title;
             EditorGUILayout.Space();
