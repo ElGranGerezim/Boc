@@ -1,112 +1,67 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(SoundBoard))]
 public class SoundBoardEditor : Editor
 {
-    SerializedProperty playlistNamesProp;
-
-    private void OnEnable () {
-        playlistNamesProp = serializedObject.FindProperty("playlistNames");
-    }
+    public int index = 0;
 
     public override void OnInspectorGUI () {
         serializedObject.Update();
         var t = (target as SoundBoard);
 
-        //Makes sure when a new SoundBoard is created in inspector the rest of the script doesnt throw a fit b/c playlist hasn't been initialized yet.
-        if(t.playlists == null)
-        {
-            t.playlists = new Playlist[0];
-        }
-
-        //Checks to see if numbPlaylists has changed, if so, we need to re-initialize the playlist array
-        if(t.playlists.Length != t.getNumbPlaylists())
-        {
-            //What to do if it went up
-            if(t.playlists.Length < t.getNumbPlaylists())
-            {
-                var temp = new Playlist[t.playlists.Length];
-                Debug.Log("Playlist.length does not equal numbPlaylists. Re-initializing");
-                int count = 0;
-                foreach(Playlist l in t.playlists)
-                {
-                    temp[count] = l;
-                    count++;
-                }
-                t.playlists = new Playlist[temp.Length + 1];
-                count = 0;
-                foreach(Playlist l in temp)
-                {
-                    t.playlists[count] = l;
-                    count++;
-                }
-                for(int x = 0; x < t.playlists.Length; x++)
-                {
-                    if(t.playlists[x] == null)
-                    {
-                        t.playlists[x] = Playlist.CreateInstance<Playlist>();
-                    }
-                }
-            } 
-
-            //What to do if it went down
-            else if(t.playlists.Length > t.getNumbPlaylists())
-            {
-                var temp = new Playlist[t.getNumbPlaylists()];
-                for(int x = 0; x < t.getNumbPlaylists(); x++)
-                {
-                    temp[x] = t.playlists[x];
-                }
-                t.playlists = new Playlist[t.getNumbPlaylists()];
-                t.playlists = temp;
-            }
-        }
 
         //Variables for easier access
-        Playlist[] lists = t.playlists;
-        String[] names = t.getPlaylistNames();
+        List<string> names = t.getPlaylistNames();
 
-        //PropertyFields for access to numbPLaylsit and playlistNames
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("numbPlaylists"));
-        EditorGUILayout.PropertyField(playlistNamesProp);
+        //Style and Label
+        GUIStyle myStyle = new GUIStyle();
+        myStyle.fontStyle = FontStyle.Bold;
+        GUILayout.Label("Select a playlist", myStyle);
 
-        //For loop to handle displaying each Playlists
-        for (int i = 0; i < t.playlists.Length; i++)
+        //The all powerful controller for this whole script, index. DO NOT TOUCH
+        index = EditorGUILayout.Popup(index, listToArray(names));
+
+        //Utility Buttons
+        if(GUILayout.Button("Create Playlist"))
         {
-            //Catch in case there's more playlists than names
-            string n = null;
-            if(i < names.Length)
-            { n = names[i]; }
+            index = t.addPlaylist();
+        }
+        if(GUILayout.Button("Delete Current Playlist"))
+        {
+            t.delete(index);
+            index = 0;
+        }
 
-            //Catch in case any of the playlists are null
-            if(lists[i] == null)
-            {
-                lists[i] = Playlist.CreateInstance<Playlist>();
-            }
+        //Style Spaces
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
 
-            //Catch in case there's more playlists than names.
-            if (n != null)
-            {
-                lists[i].title = n;
-            } else
-            {
-                Debug.LogError("More Playlists than names! Fix PlaylistNames Size please!");
-                lists[i].title = "Set Name Please";
-            }
-
-            //Setup and create PropertyField for the Playlist. 
-            var currentList = new SerializedObject(lists[i]);
-            GUIContent l = new GUIContent();
-            l.text = lists[i].title;
-            EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(currentList.FindProperty("clips"), l);
+        //Makes sure we aren't trying to draw a playlist that doesn't exist
+        if(index <= t.playlists.Count() - 1)
+        {
+            EditorGUILayout.LabelField("Playlist Name: ", myStyle);
+            t.playlists[index].title = EditorGUILayout.TextField(t.playlists[index].title);
+            var currentList = new SerializedObject(t.playlists[index]);
+            EditorGUILayout.PropertyField(currentList.FindProperty("clips"));
             currentList.ApplyModifiedProperties();
         }
-        serializedObject.ApplyModifiedProperties();
 
+        serializedObject.ApplyModifiedProperties();
     }
+
+    private string[] listToArray (List<string> names) {
+        string[] r = new string[names.Count];
+        for(int i = 0; i < names.Count; i++)
+        {
+            r[i] = names[i];
+        }
+        return r;
+    }
+
 }
