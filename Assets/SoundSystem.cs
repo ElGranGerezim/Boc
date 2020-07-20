@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class SoundSystem:MonoBehaviour {
     [Tooltip("If true, automatically calls DontDestroyOnLoad(this) on awake")]
     [SerializeField] bool dontDestroyOnLoad;
@@ -22,10 +23,7 @@ public class SoundSystem:MonoBehaviour {
     // Start is called before the first frame update
     void Start () {
         myAudio = this.GetComponent<AudioSource>();
-        if(false)
-        {
-            Debug.Log("sTOP");
-        }
+        Debug.Log("Test. Soundboard is " + soundBoard);
     }
 
     public void playSound () {
